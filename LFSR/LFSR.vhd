@@ -4,42 +4,51 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity LFSRCore is 
     Port (
-    CLK : in std_logic;
-    RESET : in std_logic;
-    ENABLE : in std_logic;
-    RND : out std_logic_vector (3 downto 0)
+        CLK    : in  std_logic;
+        RESET  : in  std_logic;
+        ENABLE : in  std_logic;
+        RND    : out std_logic_vector (3 downto 0)
     );
 end LFSRCore;
 
-
 architecture LFSRCore_Arch of LFSRCore is
-    -- le LFSR est composé d'un diviseur de tension 
-    -- D Flip FLop
-    -- XOR opperation
-    signal counter :integer range 0 to 5 := 0;  -- Here our signal is divised by 5 (maybe not good idk)
-    signal FINALCLK : std_logic := '0';
-
+    -- Le compteur va de 0 à 99999 (100 000 valeurs)
+    signal counter     : integer range 0 to 99999 := 0;  
+    signal FINALCLK    : std_logic := '0';
+    
+    -- Initialisation à "1010" comme demandé
+    signal RNDinternal : std_logic_vector (3 downto 0) := "1010";
 begin
-    MyDiviseurFreq_Proc : process(CLK)
-
+    
+    -- Processus 1 : Diviseur de Fréquence
+    MyDiviseurFreq_Proc : process(CLK, RESET)
     begin 
         if RESET = '1' then
             counter <= 0;
             FINALCLK <= '0';
-
         elsif rising_edge(CLK) then
-            if counter = 5 then
+            if counter = 99999 then
                 counter <= 0;
                 FINALCLK <= not(FINALCLK);
+            else
+                counter <= counter + 1;
             end if;
-            counter <= counter + 1;
         end if;
-    end;
+    end process;
 
-
-    MyLFSRore_Proc : process (CLK, RESET, ENABLE)
+    -- Processus 2 : Coeur du LFSR
+    MyLFSRCore_Proc : process (FINALCLK, RESET)
     begin
         if RESET = '1' then
-            RND <= "1010";
-        elsif rising_edge(CLK) then
+            RNDinternal <= "1010"; -- Reset à "1010"
+        elsif rising_edge(FINALCLK) then
             if ENABLE = '1' then
+                -- Décalage et calcul du nouveau bit (XOR entre bit 3 et bit 2)
+                RNDinternal <= RNDinternal(2 downto 0) & (RNDinternal(3) xor RNDinternal(2));
+            end if;
+        end if;
+    end process;
+
+    RND <= RNDinternal;
+
+end LFSRCore_Arch;
