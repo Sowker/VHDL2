@@ -1,84 +1,62 @@
 library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.std_logic_unsigned.all;
-entity ALUSELROUTE is
-    generic (
-        N : integer := 4
+use IEEE.STD_LOGIC_1164.ALL;
 
+entity ALUBuffer is 
+    Port (
+        CLK         : in  std_logic;
+        RESET       : in  std_logic;
+        -- Entrées et CE pour les Buffers A et B
+        CE_Buf_A    : in  std_logic;
+        Buf_A_in    : in  std_logic_vector(3 downto 0);
+        CE_Buf_B    : in  std_logic;
+        Buf_B_in    : in  std_logic_vector(3 downto 0);
+        -- Entrées pour les retenues
+        SR_IN_L     : in  std_logic;
+        SR_IN_R     : in  std_logic;
+        -- Sorties allant vers le cœur de l'ALU
+        Buf_A_out   : out std_logic_vector(3 downto 0);
+        Buf_B_out   : out std_logic_vector(3 downto 0);
+        MEM_SR_IN_L : out std_logic;
+        MEM_SR_IN_R : out std_logic
     );
-    port (
-        CLK : in std_logic;
-        RESET : in std_logic;
-        SR_IN_L : in std_logic_vector (4 - 1 downto 0);
-        SR_IN_R : in std_logic_vector (4 - 1 downto 0);
-        A_IN : in std_logic_vector (4 - 1 downto 0);
-        B_IN : in std_logic_vector (4 - 1 downto 0);
-        SEL_ROUTE : in std_logic_vector(4 - 1 downto 0);
-        S : in std_logic_vector(8 - 1 downto 0);
+end ALUBuffer;
 
-        Buffer_A : out std_logic_vector(3 downto 0);
-        Buffer_B : out std_logic_vector(3 downto 0);
-        MEM_CACHE_1 : out std_logic_vector(7 downto 0);
-        MEM_CACHE_2 : out std_logic_vector(7 downto 0)
-    );
-end ALUSELROUTE;
-
-architecture ALUSELROUTE_arch of ALUSELROUTE is
-    signal reg_Buffer_A : std_logic_vector(3 downto 0) := (others => '0');
-    signal reg_Buffer_B : std_logic_vector(3 downto 0) := (others => '0');
-    signal reg_MEM_CACHE_1 : std_logic_vector(7 downto 0) := (others => '0');
-    signal reg_MEM_CACHE_2 : std_logic_vector(7 downto 0) := (others => '0');
+architecture Behavioral of ALUBuffer is
+    signal reg_A    : std_logic_vector(3 downto 0) := "0000";
+    signal reg_B    : std_logic_vector(3 downto 0) := "0000";
+    signal reg_SR_L : std_logic := '0';
+    signal reg_SR_R : std_logic := '0';
 begin
-    MyALUSELROUTEProc : process(CLK,RESET);
-    begin
-        if RESET = '1' then
-            reg_Buffer_A <= (others => 0);
-            reg_Buffer_B <= (others => 0);
-            reg_MEM_CACHE_1 <= (others => 0);
-            reg_MEM_CACHE_2 <= (others => 0);
-        elsif rising_edge(CLK) then
-            case SEL_ROUTE is
-                when "0000" =>
-                    reg_Buffer_A <= A_IN;
-                when "0001" =>
-                    reg_Buffer_B <= B_IN;
-                when "0010" =>
-                    reg_Buffer_A <= S(3 downto 0);
-                when "0011" =>
-                    reg_Buffer_A <= S(7 downto 4);
-                when "0100" =>
-                    reg_Buffer_B <= S(3 downto 0);
-                when "0101" =>
-                    reg_Buffer_B <= S(7 downto 4);
-                when "0110" =>
-                    reg_MEM_CACHE_1 <= S;
-                when "0111" =>
-                    reg_MEM_CACHE_2 <= S;
-                when "1000" =>
-                    reg_Buffer_A <= reg_MEM_CACHE_1(3 downto 0);
-                when "1001" =>
-                    reg_Buffer_A <= reg_MEM_CACHE_1(7 downto 4);
-                when "1010" =>
-                    reg_Buffer_B <= reg_MEM_CACHE_1(3 downto 0);
-                when "1011" =>
-                    reg_Buffer_B <= reg_MEM_CACHE_1(7 downto 4);
-                when "1100" =>
-                    reg_Buffer_A <= reg_MEM_CACHE_2(3 downto 0);
-                when "1101" =>
-                    reg_Buffer_A <= reg_MEM_CACHE_2(7 downto 4);
-                when "1110" =>
-                    reg_Buffer_B <= reg_MEM_CACHE_2(3 downto 0);
-                when "1111" =>
-                    reg_Buffer_B <= reg_MEM_CACHE_2(7 downto 4);
-                when others =>
-                    null;
-            end case;
-        end if;
-    end process MyALUSELROUTEProc;
-    Buffer_A<=reg_Buffer_A;
-    Buffer_B<=reg_Buffer_B;
-    MEM_CACHE_1<=reg_MEM_CACHE_1;
-    MEM_CACHE_2<=reg_MEM_CACHE_2;
     
+    process(CLK, RESET)
+    begin
 
-end ALUSELROUTE_arch;
+        if RESET = '1' then
+            reg_A    <= "0000";
+            reg_B    <= "0000";
+            reg_SR_L <= '0';
+            reg_SR_R <= '0';
+            
+    
+        elsif rising_edge(CLK) then
+            
+            if CE_Buf_A = '1' then
+                reg_A <= Buf_A_in;
+            end if;
+            
+            if CE_Buf_B = '1' then
+                reg_B <= Buf_B_in;
+            end if;
+
+            reg_SR_L <= SR_IN_L;
+            reg_SR_R <= SR_IN_R;
+            
+        end if;
+    end process;
+
+    Buf_A_out   <= reg_A;
+    Buf_B_out   <= reg_B;
+    MEM_SR_IN_L <= reg_SR_L;
+    MEM_SR_IN_R <= reg_SR_R;
+
+end Behavioral;

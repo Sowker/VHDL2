@@ -1,80 +1,203 @@
 library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.std_logic_unsigned.all;
-entity ALUSELROUTE is
-    generic (
-        N : integer := 4
+use IEEE.STD_LOGIC_1164.ALL;
 
-    );
-    port (
-        CLK : in std_logic;
-        RESET : in std_logic;
-        SR_IN_L : in std_logic_vector (4 - 1 downto 0);
-        SR_IN_R : in std_logic_vector (4 - 1 downto 0);
-        A_IN : in std_logic_vector (4 - 1 downto 0);
-        B_IN : in std_logic_vector (4 - 1 downto 0);
-        SEL_ROUTE : in std_logic_vector(4 - 1 downto 0);
-        S : in std_logic_vector(8 - 1 downto 0);
+entity ALUSELROUTE is 
+    Port (
+        -- Inputs
+        SEL_ROUTE   : in  std_logic_vector(3 downto 0);
+        A           : in  std_logic_vector(3 downto 0);
+        B           : in  std_logic_vector(3 downto 0);
+        S           : in  std_logic_vector(7 downto 0);
+        s_Mem_1_out : in  std_logic_vector(7 downto 0);
+        s_Mem_2_out : in  std_logic_vector(7 downto 0);
 
-        Buffer_A : out std_logic_vector(3 downto 0);
-        Buffer_B : out std_logic_vector(3 downto 0);
-        MEM_CACHE_1 : out std_logic_vector(7 downto 0);
-        MEM_CACHE_2 : out std_logic_vector(7 downto 0)
+        -- Outputs
+        CE_Buf_A    : out std_logic;
+        CE_Buf_B    : out std_logic;
+        CE_Mem_1    : out std_logic;
+        CE_Mem_2    : out std_logic;
+        
+        Buf_A_in    : out std_logic_vector(3 downto 0);
+        Buf_B_in    : out std_logic_vector(3 downto 0);
+        Mem_1_In    : out std_logic_vector(7 downto 0);
+        Mem_2_In    : out std_logic_vector(7 downto 0)
     );
 end ALUSELROUTE;
 
-architecture ALUSELROUTE_arch of ALUSELROUTE is
+architecture Behavioral of ALUSELROUTE is
 begin
-    MyALUSELROUTEProc : process (SEL_ROUTE, S, A, B, Buf_A_out, Buf_B_out, Mem_1_out, Mem_2_out)
+    process(SEL_ROUTE, A, B, S, s_Mem_1_out, s_Mem_2_out)
     begin
         case SEL_ROUTE is
             when "0000" =>
-            CE_Buf_A<='1'; 
-            DE_Buf_B<='0';
-            CE_Mem_A<='1'; 
-            DE_Mem_B<='0';
-            Buf_A_in<=A;
-            Buf_B_in<=(others=>'0');
-            Mem_1_In <=(others=>'0');
-            Mem_2_In <=(others=>'0');
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= A;
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0001" =>
-                reg_Buffer_B <= B_IN;
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= B;
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0010" =>
-                reg_Buffer_A <= S(3 downto 0);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= S(3 downto 0);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0011" =>
-                reg_Buffer_A <= S(7 downto 4);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= S(7 downto 4);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0100" =>
-                reg_Buffer_B <= S(3 downto 0);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= S(3 downto 0);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0101" =>
-                reg_Buffer_B <= S(7 downto 4);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= S(7 downto 4);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "0110" =>
-                reg_MEM_CACHE_1 <= S;
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '1'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= S;
+                Mem_2_In <= (others=>'0');
+
             when "0111" =>
-                reg_MEM_CACHE_2 <= S;
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '1';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= S;
+
             when "1000" =>
-                reg_Buffer_A <= reg_MEM_CACHE_1(3 downto 0);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= s_Mem_1_out(3 downto 0);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1001" =>
-                reg_Buffer_A <= reg_MEM_CACHE_1(7 downto 4);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= s_Mem_1_out(7 downto 4);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1010" =>
-                reg_Buffer_B <= reg_MEM_CACHE_1(3 downto 0);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= s_Mem_1_out(3 downto 0);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1011" =>
-                reg_Buffer_B <= reg_MEM_CACHE_1(7 downto 4);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= s_Mem_1_out(7 downto 4);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1100" =>
-                reg_Buffer_A <= reg_MEM_CACHE_2(3 downto 0);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= s_Mem_2_out(3 downto 0);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1101" =>
-                reg_Buffer_A <= reg_MEM_CACHE_2(7 downto 4);
+                CE_Buf_A <= '1'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= s_Mem_2_out(7 downto 4);
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1110" =>
-                reg_Buffer_B <= reg_MEM_CACHE_2(3 downto 0);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= s_Mem_2_out(3 downto 0);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when "1111" =>
-                reg_Buffer_B <= reg_MEM_CACHE_2(7 downto 4);
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '1';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= s_Mem_2_out(7 downto 4);
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
+
             when others =>
-                null;
+                CE_Buf_A <= '0'; 
+                CE_Buf_B <= '0';
+                CE_Mem_1 <= '0'; 
+                CE_Mem_2 <= '0';
+                Buf_A_in <= (others=>'0');
+                Buf_B_in <= (others=>'0');
+                Mem_1_In <= (others=>'0');
+                Mem_2_In <= (others=>'0');
         end case;
-
-    end process MyALUSELROUTEProc;
-    Buffer_A <= reg_Buffer_A;
-    Buffer_B <= reg_Buffer_B;
-    MEM_CACHE_1 <= reg_MEM_CACHE_1;
-    MEM_CACHE_2 <= reg_MEM_CACHE_2;
-
-end ALUSELROUTE_arch;
+    end process;
+end Behavioral;
