@@ -1,72 +1,79 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity LFSRCore_tb is
--- Vide car c'est un testbench
-end LFSRCore_tb;
+entity tb_LFSRCore is
+-- Empty entity for testbench
+end tb_LFSRCore;
 
-architecture behavior of LFSRCore_tb is
+architecture behavior of tb_LFSRCore is 
 
+    -- 1. Component Declaration for the Unit Under Test (UUT)
     component LFSRCore
-    Port (
-        CLK    : in  std_logic;
-        RESET  : in  std_logic;
-        ENABLE : in  std_logic;
-        RND    : out std_logic_vector(3 downto 0)
-    );
+    port(
+         CLK    : in  std_logic;
+         RESET  : in  std_logic;
+         ENABLE : in  std_logic;
+         RND    : out std_logic_vector(3 downto 0)
+        );
     end component;
+    
+    -- 2. Internal Signals
+    signal clk    : std_logic := '0';
+    signal reset  : std_logic := '0';
+    signal enable : std_logic := '0';
+    signal rnd    : std_logic_vector(3 downto 0);
 
-    signal CLK    : std_logic := '0';
-    signal RESET  : std_logic := '0';
-    signal ENABLE : std_logic := '0';
-    signal RND    : std_logic_vector(3 downto 0);
-
-    -- Horloge 100 MHz
-    constant CLK_period : time := 10 ns;
+    -- 3. Clock period definition (100 MHz = 10 ns)
+    constant clk_period : time := 10 ns;
 
 begin
 
-    uut: LFSRCore PORT MAP (
-        CLK    => CLK,
-        RESET  => RESET,
-        ENABLE => ENABLE,
-        RND    => RND
-    );
+    -- 4. Instantiate the Unit Under Test (UUT)
+    uut: LFSRCore 
+        port map (
+          CLK    => clk,
+          RESET  => reset,
+          ENABLE => enable,
+          RND    => rnd
+        );
 
-    CLK_process :process
+    -- 5. Clock generation process
+    clk_process :process
     begin
-        CLK <= '0';
-        wait for CLK_period/2;
-        CLK <= '1';
-        wait for CLK_period/2;
+        clk <= '0';
+        wait for clk_period/2;
+        clk <= '1';
+        wait for clk_period/2;
     end process;
 
+    -- 6. Stimulus process (The test script)
     stim_proc: process
     begin		
-        -- Initialisation
-        RESET  <= '1';
-        ENABLE <= '0';
+        -- Step A: Assert reset (Initialize)
+        reset <= '1';
+        enable <= '0';
         wait for 100 ns;	
-
-        -- Fin du Reset
-        RESET  <= '0';
-        wait for 100 ns;
-
-        -- Activation
-        ENABLE <= '1';
-
-        -- Le compteur va jusqu'à 99999, donc le LFSR met à jour sa valeur
-        -- toutes les 2 millisecondes (500 Hz).
-        -- On attend 40 ms pour s'assurer de voir la séquence complète boucler.
-        wait for 40 ms;
-
-        -- Test de désactivation
-        ENABLE <= '0';
-        wait for 5 ms;
-
-        -- Arrêt de la simulation
-        assert false report "Fin de la simulation" severity failure;
-        wait;
+        
+        -- Step B: De-assert reset 
+        -- At this point, RND should output your starting value "1011"
+        reset <= '0';
+        wait for clk_period * 2;
+        
+        -- Step C: Turn on the ENABLE signal
+        -- We will let it run for 20 clock cycles. 
+        -- Since there are 15 unique states, you should see it complete a 
+        -- full cycle and start repeating the same numbers again.
+        enable <= '1';
+        wait for clk_period * 20; 
+        
+        -- Step D: Turn off the ENABLE signal
+        -- RND should freeze on its current value and stop shifting
+        enable <= '0';
+        wait for clk_period * 5;
+        
+        -- Step E: Stop the simulation
+        std.env.stop;
+        
     end process;
 
 end behavior;
