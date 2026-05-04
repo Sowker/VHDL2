@@ -4,8 +4,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity ALUCore is 
     Port (
-    CLK : in std_logic;
-    RESET : in std_logic;
     Sel_FCT : in std_logic_vector (3 downto 0);
     SR_OUT_L : out std_logic;
     SR_OUT_R : out std_logic;
@@ -22,15 +20,12 @@ end ALUCore;
 architecture ALUCore_Arch of ALUCore is
 
 begin
-    MyALUCore_Proc : process (Sel_FCT, SR_IN_L, SR_IN_R, A_IN, B_IN, CLK, RESET)
+    MyALUCore_Proc : process (Sel_FCT, SR_IN_L, SR_IN_R, A_IN, B_IN)
     begin
-        if RESET = '1' then
-            SR_OUT_L <= '0';
-            SR_OUT_R <= '0';
-            S <= (others => '0');
-            
-        elsif rising_edge(CLK) then 
-            if Sel_FCT = "0000" then
+        SR_OUT_L <= '0';
+        SR_OUT_R <= '0';
+        S <= (others => '0');
+        if Sel_FCT = "0000" then
                 SR_OUT_L <= '0';
                 SR_OUT_R <= '0';
                 S <= "00000000";
@@ -98,8 +93,6 @@ begin
                 S <= "0000" & B_IN(2 downto 0) & SR_IN_R;
                 SR_OUT_L <= B_IN(3);
             end if;
-        end if;
-
     end process;
 
 end ALUCore_Arch;
