@@ -1,0 +1,7 @@
+v 4
+file . "LFSR.vhd" "a6c7e62ef47e731f62c22ed37c6cbd197a8a5b9d" "20260501100824.177":
+  entity lfsrcore at 1( 0) + 0 on 23;
+  architecture lfsrcore_arch of lfsrcore at 14( 270) + 0 on 24;
+file . "mytbLFSR.vhd" "eee499ed83ec4e8175adeeb496cc56e0f3a4caa4" "20260501100824.178":
+  entity tb_lfsrcore at 1( 0) + 0 on 25;
+  architecture behavior of tb_lfsrcore at 8( 114) + 0 on 26;

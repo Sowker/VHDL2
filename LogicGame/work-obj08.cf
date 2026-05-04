@@ -1,0 +1,7 @@
+v 4
+file . "mytbLogiGame.vhd" "fd84d033beb46a69cdfefc5ac71fdc7b02b95930" "20260501182925.554":
+  entity tb_logigamecore at 1( 0) + 0 on 13;
+  architecture behavior of tb_logigamecore at 9( 148) + 0 on 14;
+file . "LogiGame.vhd" "3a3c21f4640b37cd457a113c2cf32710fb6624f6" "20260501182925.552":
+  entity logigamecore at 1( 0) + 0 on 11;
+  architecture logigamecore_arch of logigamecore at 16( 356) + 0 on 12;
