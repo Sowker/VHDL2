@@ -1,7 +1,0 @@
-v 4
-file . "ALU.vhd" "7e3a22011799e1ce125980ae4dc3e9a3a4d138a3" "20260417070822.519":
-  entity alucore at 1( 0) + 0 on 15;
-  architecture alucore_arch of alucore at 22( 469) + 0 on 16;
-file . "mytbALU.vhd" "8856f7b93c2f9c1ecb40e5a13d1a86771931822b" "20260417070822.519":
-  entity myalutestbench at 1( 0) + 0 on 17;
-  architecture myalutestbench_arch of myalutestbench at 9( 122) + 0 on 18;
