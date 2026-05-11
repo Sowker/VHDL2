@@ -15,7 +15,8 @@ architecture Behavioral of tb_Top_Level is
             RESET       : in  std_logic;
             A_IN        : in  std_logic_vector(3 downto 0);
             B_IN        : in  std_logic_vector(3 downto 0);
-            RES_OUT     : out std_logic_vector(7 downto 0)
+            RES_OUT     : out std_logic_vector(7 downto 0);
+            DONE        : out std_logic
         );
     end component;
 
@@ -25,6 +26,7 @@ architecture Behavioral of tb_Top_Level is
     signal a_in    : std_logic_vector(3 downto 0) := "0000";
     signal b_in    : std_logic_vector(3 downto 0) := "0000";
     signal res_out : std_logic_vector(7 downto 0);
+    signal done    : std_logic;
 
     -- Période de 10 ns = 100 MHz (Fréquence de la carte ARTY)
     constant clk_period : time := 10 ns;
@@ -37,7 +39,8 @@ begin
         RESET   => reset,
         A_IN    => a_in,
         B_IN    => b_in,
-        RES_OUT => res_out
+        RES_OUT => res_out,
+        DONE    => done
     );
 
     -- 4. Générateur d'horloge infini
@@ -56,8 +59,8 @@ begin
 
         -- INITIALISATION ET RESET
         -- On fixe les valeurs de test : A = 6 et B = 3
-        a_in <= "0110"; -- 6 en décimal
-        b_in <= "0011"; -- 3 en décimal
+        a_in <= "1111"; -- 6 en décimal
+        b_in <= "1111"; -- 3 en décimal
         
         -- On applique le Reset pour vider les caches et mettre le PC à 0
         reset <= '1';
@@ -74,26 +77,16 @@ begin
         -- Calcul attendu : 6 * 3 = 18 
         -- En binaire : 18 = 0001 0010
         -- ========================================================
-        wait for clk_period * 4; 
+        -- TEST AUTOMATE 1
+        wait for clk_period * 6; -- On attend d'être en plein dans la pause !
         report ">> AUTOMATE 1 TERMINE. Observez RES_OUT : il doit valoir 18 (00010010)" severity note;
         
-        -- ========================================================
-        -- TEST AUTOMATE 2 : (A + B) XNOR A
-        -- Instructions ROM : 4 à 11 (prend 8 cycles d'horloge)
-        -- Calcul : A+B = 9 (1001). XNOR A(0110) = NOT(1111) = 0
-        -- En binaire : 0000 0000
-        -- ========================================================
-        wait for clk_period * 8;
+        -- TEST AUTOMATE 2
+        wait for clk_period * 12; -- On attend la pause de l'automate 2
         report ">> AUTOMATE 2 TERMINE. Observez RES_OUT : il doit valoir 0 (00000000)" severity note;
 
-        -- ========================================================
-        -- TEST AUTOMATE 3 : (A0 AND B1) OR (A1 AND B0)
-        -- Instructions ROM : 12 à 24 (prend 13 cycles d'horloge)
-        -- Calcul : A=0110 (A0=0, A1=1) | B=0011 (B0=1, B1=1)
-        -- (0 AND 1) OR (1 AND 1) = 0 OR 1 = 1
-        -- En binaire : 0000 0001
-        -- ========================================================
-        wait for clk_period * 13;
+        -- TEST AUTOMATE 3
+        wait for clk_period * 22; -- On attend la fin de l'automate 3
         report ">> AUTOMATE 3 TERMINE. Observez RES_OUT : il doit valoir 1 (00000001)" severity note;
 
         -- ========================================================
