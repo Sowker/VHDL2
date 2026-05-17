@@ -12,7 +12,7 @@ end DiviseurCore;
 
 architecture DiviseurCore_Arch of DiviseurCore is
     
-    signal counter : integer range 0 to 99999 := 0;  
+    signal counter : integer range 0 to 5 := 0;  -- 99999
     signal finalclk_int : std_logic := '0'; 
     
 begin
@@ -23,7 +23,7 @@ begin
             counter <= 0;
             finalclk_int <= '0';
         elsif rising_edge(CLK) then
-            if counter = 99999 then
+            if counter = 5 then  -- 99999
                 counter <= 0;
                 finalclk_int <= not(finalclk_int);
             else

@@ -1,14 +1,12 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
 
 entity tb_ControlerCore is
--- Testbench entities have no ports
+-- Empty entity for testbench
 end tb_ControlerCore;
 
-architecture behavior of tb_ControlerCore is
+architecture behavior of tb_ControlerCore is 
 
-    -- Component Declaration for the Device Under Test (DUT)
     component ControlerCore
     Port (
         CLK   : in std_logic;
@@ -22,87 +20,126 @@ architecture behavior of tb_ControlerCore is
     end component;
 
     -- Inputs
-    signal CLK : std_logic := '0';
-    signal BTN : std_logic_vector(3 downto 0) := (others => '0');
-    signal SW  : std_logic_vector(3 downto 2) := "00";
+    signal clk : std_logic := '0';
+    signal btn : std_logic_vector(3 downto 0) := "0000";
+    signal sw  : std_logic_vector(3 downto 2) := "00";
 
     -- Outputs
-    signal LED   : std_logic_vector(3 downto 0);
-    signal LED_R : std_logic;
-    signal LED_G : std_logic;
-    signal LED_B : std_logic;
+    signal led   : std_logic_vector(3 downto 0);
+    signal led_r : std_logic;
+    signal led_g : std_logic;
+    signal led_b : std_logic;
 
-    -- Clock period definitions
-    constant CLK_period : time := 10 ns;
+    -- Timings
+    constant clk_period : time := 10 ns;
+    constant human_reaction : time := 50 us; 
 
 begin
 
-    -- Instantiate the Device Under Test (DUT)
-    uut: ControlerCore PORT MAP (
-        CLK   => CLK,
-        BTN   => BTN,
-        SW    => SW,
-        LED   => LED,
-        LED_R => LED_R,
-        LED_G => LED_G,
-        LED_B => LED_B
+    uut: ControlerCore port map (
+        CLK => clk, 
+        BTN => btn, 
+        SW => sw,
+        LED => led, 
+        LED_R => led_r, 
+        LED_G => led_g, 
+        LED_B => led_b
     );
 
-    -- Clock process definition
-    CLK_process :process
+    -- Clock generation process (100MHz)
+    clk_process :process
     begin
-        CLK <= '0';
-        wait for CLK_period/2;
-        CLK <= '1';
-        wait for CLK_period/2;
+        clk <= '0';
+        wait for clk_period/2;
+        clk <= '1';
+        wait for clk_period/2;
     end process;
 
     -- Stimulus process
     stim_proc: process
     begin		
-        -- 1. System Reset & Settle Time
+        -- Initialize System
+        sw <= "00"; 
         wait for 100 ns;	
 
-        -- 2. Start the Game (IDLE "00" -> NEW_ROUND "01")
-        BTN(3) <= '1';
-        wait for CLK_period * 2;
-        BTN(3) <= '0';
-        
-        -- Wait for LFSR and State Machine to process
-        -- Since clock is divided by 5, we wait longer to ensure it shifts
-        wait for CLK_period * 15;
+        -- ==========================================
+        -- GAME 1: START
+        -- ==========================================
+        btn(3) <= '1';
+        wait for clk_period * 2;
+        btn(3) <= '0';
 
-        -- 3. Simulate Gameplay in WAIT_RESPONSE ("10")
-        SW <= "10"; -- Set difficulty
-        
-        -- Try pressing a button to trigger a VALID_HIT and return to "01"
-        -- (Pressing Green as a guess)
-        BTN(1) <= '1';
-        wait for CLK_period * 5;
-        BTN(1) <= '0';
-        
-        wait for CLK_period * 20;
+        -- WIN 3 ROUNDS
+        for i in 1 to 3 loop
+            while (led_r = '0' and led_g = '0' and led_b = '0') loop
+                wait for clk_period;
+            end loop;
+            
+            wait for human_reaction;
+            
+            if led_r = '1' then
+                btn(2) <= '1'; 
+            elsif led_g = '1' then
+                btn(1) <= '1'; 
+            elsif led_b = '1' then
+                btn(0) <= '1'; 
+            end if;
+            
+            while (led_r = '1' or led_g = '1' or led_b = '1') loop
+                wait for clk_period;
+            end loop;
+            
+            btn(2 downto 0) <= "000";
+            wait for clk_period * 5;
+        end loop;
 
-        -- Try pressing another button just in case the first wasn't the correct color
-        BTN(2) <= '1';
-        wait for CLK_period * 5;
-        BTN(2) <= '0';
+        -- LOSE ROUND 4 INTENTIONALLY
+        while (led_r = '0' and led_g = '0' and led_b = '0') loop
+            wait for clk_period;
+        end loop;
         
-        wait for CLK_period * 20;
-
-        BTN(0) <= '1';
-        wait for CLK_period * 5;
-        BTN(0) <= '0';
-
-        -- Let the simulation run to observe loops or timeouts
-        wait for 1000 ns;
+        wait for human_reaction; -- Human freezes!
         
-        -- Reset game from END_GAME ("11") -> IDLE ("00")
-        BTN(3) <= '1';
-        wait for CLK_period * 2;
-        BTN(3) <= '0';
+        while led(3) = '0' loop  -- Wait for Game Over
+            wait for clk_period;
+        end loop;
 
-        wait;
+        -- Observe the Game Over state for 150us before retrying
+        wait for 150 us;
+
+        -- ==========================================
+        -- GAME 2: RETRY
+        -- ==========================================
+        
+        -- Press Start Button again to reset and retry
+        btn(3) <= '1';
+        wait for clk_period * 2;
+        btn(3) <= '0';
+
+        -- WIN 2 ROUNDS TO PROVE IT RESET
+        for i in 1 to 2 loop
+            while (led_r = '0' and led_g = '0' and led_b = '0') loop
+                wait for clk_period;
+            end loop;
+            
+            wait for human_reaction;
+            
+            if led_r = '1' then
+                btn(2) <= '1'; 
+            elsif led_g = '1' then
+                btn(1) <= '1'; 
+            elsif led_b = '1' then
+                btn(0) <= '1'; 
+            end if;
+            
+            while (led_r = '1' or led_g = '1' or led_b = '1') loop
+                wait for clk_period;
+            end loop;
+            
+            btn(2 downto 0) <= "000";
+            wait for clk_period * 5;
+        end loop;
+        
     end process;
 
 end behavior;

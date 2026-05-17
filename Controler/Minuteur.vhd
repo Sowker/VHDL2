@@ -26,19 +26,19 @@ begin
                 counter <= counter + 1;
                 
                 if SW_LEVEL = "00" then
-                    if counter = 400000000 then
+                    if counter = 40 then   -- 400000000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "01" then
-                    if counter = 200000000 then
+                    if counter = 20 then  -- 200000000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "10" then
-                    if counter = 100000000 then
+                    if counter = 10 then  -- 100000000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "11" then
-                    if counter = 50000000 then
+                    if counter = 5 then  -- 50000000
                         S <= '1';
                     end if;
                 end if;

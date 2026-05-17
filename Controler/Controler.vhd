@@ -15,15 +15,16 @@ entity ControlerCore is
 end ControlerCore;
 
 architecture ControlerCore_Arch of ControlerCore is
-    type stateGame is (IDLE, NEW_ROUND, RND, WAIT_RESPONSE, END_GAME);
+    type stateGame is (IDLE, NEW_ROUND, RND, WAIT_RESPONSE, WAIT_RELEASE, END_GAME);
     signal state : stateGame := IDLE;
 
     signal my_reset : std_logic := '1';
+    signal round_reset : std_logic := '0'; -- NEW: Resets just the buttons between rounds
     signal my_timeout : std_logic := '0'; 
     signal my_enable_logigame : std_logic := '0';
     signal my_enable_lfsr : std_logic := '0';
     signal my_start_timer : std_logic := '0';
-    signal my_cur_lsfr : std_logic_vector := "1011";
+    signal my_cur_lsfr : std_logic_vector (3 downto 0) := "1011";
 
     signal my_led : std_logic_vector (2 downto 0) := "000";
 
@@ -61,7 +62,7 @@ architecture ControlerCore_Arch of ControlerCore is
     end component;
     signal my_finalclk : std_logic;
 
-    component LogiGame is
+    component LogiGameCore is
         Port (
             CLK : in std_logic;
             RESET : in std_logic;
@@ -72,7 +73,7 @@ architecture ControlerCore_Arch of ControlerCore is
         );
     end component;
     signal my_score : std_logic_vector (3 downto 0) := "0000";
-    signal my_game_over : std_logic := '1';
+    signal my_game_over : std_logic;
 
     component MinuteurCore is
         Port (
@@ -91,7 +92,7 @@ begin
     myComponentInputHandler : InputHandler
     port map (
         CLK => CLK,
-        RESET => my_reset,
+        RESET => round_reset, -- Uses round_reset so score isn't wiped!
         TIMEOUT => my_timeout,
         LED_COLOR => my_led,
         BTN_R => BTN(2),
@@ -115,7 +116,7 @@ begin
         FINALCLK => my_finalclk
     );
 
-    myComponentLogiGame : LogiGame
+    myComponentLogiGame : LogiGameCore
     port map (
         CLK => CLK,
         RESET => my_reset,         
@@ -137,24 +138,33 @@ begin
     Game_proc : process(CLK)
     begin
         if rising_edge(CLK) then
+            
+            -- DEFAULT PULSES: These force signals back to '0' automatically
+            my_enable_lfsr <= '0';
+            my_enable_logigame <= '0';
+            my_start_timer <= '0';
+            round_reset <= '0';
+
             if state = IDLE then
+                my_reset <= '1'; -- Global wipe
+                round_reset <= '1';
                 my_led <= "000";
                 LED(3) <= '1';
                 LED(2 downto 0) <= "000";
+                my_timeout <= '0';
+                
                 if BTN(3) = '1' then
+                    my_reset <= '0';
                     state <= NEW_ROUND;
                 end if;
 
             elsif state = NEW_ROUND then
-                -- génère la séquence pseudo aléatoire
-                my_reset <= '0';
                 my_enable_lfsr <= '1';
                 state <= RND;
-                
 
             elsif state = RND then
-
-                if my_rnd != my_cur_lsfr then
+                if my_rnd /= my_cur_lsfr then
+                    my_cur_lsfr <= my_rnd; -- Remember the new number so we don't infinitely loop
 
                     if to_integer(unsigned(my_rnd)) mod 3 = 0 then
                         my_led <= "001"; -- Blue
@@ -164,44 +174,39 @@ begin
                         my_led <= "100"; -- Red    
                     end if;
 
-                    state <= NEW_ROUND
-                    my_enable_lfsr <= '0';
+                    -- Trigger timer and reset buttons right before waiting
+                    my_start_timer <= '1'; 
+                    round_reset <= '1';
+                    state <= WAIT_RESPONSE;
+                else
+                    my_enable_lfsr <= '1'; -- Try again if random number was the same
                 end if;
 
-
-            elsif state = NEW_ROUND then
-                -- game loop
-                my_enable_logigame <= '1';
-                my_start_timer <= '1';
-                my_timeout <= '0'; 
-
-                if my_s = '0' then
-                    if my_reset = '1' then
-                        my_reset <= '0';
-                    end if;
-
-                    if my_valid_hit = '1' then
-                        -- continue the game
-                        my_timeout <= '0'; 
-                        LED(3 downto 0) <= my_score;
-                        my_reset <= '1';
-                        state <= NEW_ROUND;
-                    end if;
-                end if;
-
-                if my_s = '1' then
-                    -- stop the game because the user did not press the button fast enough
+            elsif state = WAIT_RESPONSE then
+                
+                if my_game_over = '1' then -- verify if the player finished the game
+                    state <= END_GAME;
+                
+                elsif my_s = '1' then -- verify if the player run out of time to play
                     my_timeout <= '1'; 
-                    state <= END_GAME;
+                    my_enable_logigame <= '1'; 
+                
+                elsif my_valid_hit = '1' then -- verify if the player pressed a button
+                    my_enable_logigame <= '1'; 
+                    state <= WAIT_RELEASE; 
                 end if;
 
-                if my_game_over = '1' then
-                    my_enable_logigame <= '0';
-                    state <= END_GAME;
+            elsif state = WAIT_RELEASE then
+                
+                round_reset <= '1';
+                my_led <= "000";
+                
+                -- Check if ALL buttons are finally released ('0')
+                if BTN(2) = '0' and BTN(1) = '0' and BTN(0) = '0' then
+                    state <= NEW_ROUND;
                 end if;
 
             elsif state = END_GAME then
-                -- need to press start to reset the game
                 LED(3) <= '1';
                 if BTN(3) = '1' then
                     state <= IDLE;
@@ -210,7 +215,8 @@ begin
         end if;
     end process;
 
-
+    -- Wiring outputs
+    LED(2 downto 0) <= my_score(2 downto 0);
     LED_B <= my_led(0);
     LED_G <= my_led(1);
     LED_R <= my_led(2);
