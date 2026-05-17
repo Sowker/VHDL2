@@ -12,7 +12,8 @@ entity Top_Level is
         B_IN        : in  std_logic_vector(3 downto 0);
         
         -- Sortie globale du système
-        RES_OUT     : out std_logic_vector(7 downto 0)
+        RES_OUT     : out std_logic_vector(7 downto 0);
+        DONE        : out std_logic
     );
 end Top_Level;
 
@@ -204,5 +205,6 @@ begin
         MEM_CACHE_2 => sig_Mem_2_out,
         RES_OUT     => RES_OUT
     );
+    DONE <= '1' when sig_SEL_OUT /= "00" else '0';
 
 end Structural;
