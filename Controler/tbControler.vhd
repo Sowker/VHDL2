@@ -32,7 +32,7 @@ architecture behavior of tb_ControlerCore is
     signal LED_G : std_logic;
     signal LED_B : std_logic;
 
-    -- Clock period definition (10 ns = 100 MHz)
+    -- Clock period definitions
     constant CLK_period : time := 10 ns;
 
 begin
@@ -48,7 +48,7 @@ begin
         LED_B => LED_B
     );
 
-    -- Clock process definitions
+    -- Clock process definition
     CLK_process :process
     begin
         CLK <= '0';
@@ -60,51 +60,48 @@ begin
     -- Stimulus process
     stim_proc: process
     begin		
-        -- 1. Initial State
-        -- Hold the initial state for 100 ns to let the simulator settle.
+        -- 1. System Reset & Settle Time
         wait for 100 ns;	
-        
-        -- System is currently in IDLE ("00"). LED(3) should be high.
-        wait for CLK_period * 10;
 
-        -- 2. Start the Game
-        -- Press START (BTN(3)) to transition to NEW_ROUND ("01")
+        -- 2. Start the Game (IDLE "00" -> NEW_ROUND "01")
         BTN(3) <= '1';
         wait for CLK_period * 2;
         BTN(3) <= '0';
         
-        -- Wait for LFSR to generate a random value and transition to WAIT_RESPONSE ("10")
-        wait for CLK_period * 20;
+        -- Wait for LFSR and State Machine to process
+        -- Since clock is divided by 5, we wait longer to ensure it shifts
+        wait for CLK_period * 15;
 
-        -- 3. Simulate Gameplay
-        -- Set difficulty level on switches
-        SW <= "10"; 
+        -- 3. Simulate Gameplay in WAIT_RESPONSE ("10")
+        SW <= "10"; -- Set difficulty
         
-        -- Simulate a user pressing a color button (e.g., Green: BTN(1))
+        -- Try pressing a button to trigger a VALID_HIT and return to "01"
+        -- (Pressing Green as a guess)
         BTN(1) <= '1';
-        wait for CLK_period * 2;
+        wait for CLK_period * 5;
         BTN(1) <= '0';
         
-        -- Wait a bit before next hit
         wait for CLK_period * 20;
 
-        -- Simulate a user pressing another color button (e.g., Red: BTN(2))
+        -- Try pressing another button just in case the first wasn't the correct color
         BTN(2) <= '1';
-        wait for CLK_period * 2;
+        wait for CLK_period * 5;
         BTN(2) <= '0';
         
-        -- 4. Simulate Timeout / Game Over
-        -- Wait a long time to allow the 'MinuteurCore' to reach its limit 
-        -- and force the state machine into END_GAME ("11")
-        wait for 1500 ns;
+        wait for CLK_period * 20;
+
+        BTN(0) <= '1';
+        wait for CLK_period * 5;
+        BTN(0) <= '0';
+
+        -- Let the simulation run to observe loops or timeouts
+        wait for 1000 ns;
         
-        -- 5. Reset the Game
-        -- Press START (BTN(3)) again to return to IDLE ("00") from END_GAME
+        -- Reset game from END_GAME ("11") -> IDLE ("00")
         BTN(3) <= '1';
         wait for CLK_period * 2;
         BTN(3) <= '0';
 
-        -- End the simulation sequence
         wait;
     end process;
 

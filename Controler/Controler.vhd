@@ -15,17 +15,15 @@ entity ControlerCore is
 end ControlerCore;
 
 architecture ControlerCore_Arch of ControlerCore is
-    -- IDLE : "00"
-    -- NEW_ROUND : "01"
-    -- WAIT_RESPONSE : "10"
-    -- END_GAME : "11"
-    signal state : std_logic_vector (1 downto 0) := "00";
+    type stateGame is (IDLE, NEW_ROUND, RND, WAIT_RESPONSE, END_GAME);
+    signal state : stateGame := IDLE;
 
     signal my_reset : std_logic := '1';
     signal my_timeout : std_logic := '0'; 
     signal my_enable_logigame : std_logic := '0';
     signal my_enable_lfsr : std_logic := '0';
     signal my_start_timer : std_logic := '0';
+    signal my_cur_lsfr : std_logic_vector := "1011";
 
     signal my_led : std_logic_vector (2 downto 0) := "000";
 
@@ -44,7 +42,7 @@ architecture ControlerCore_Arch of ControlerCore is
     end component;
     signal my_valid_hit : std_logic;
 
-    component LFSR is
+    component LFSRCore is
         Port (
             CLK    : in  std_logic;
             RESET  : in  std_logic;
@@ -52,7 +50,7 @@ architecture ControlerCore_Arch of ControlerCore is
             RND    : out std_logic_vector (3 downto 0)
         );
     end component;
-    signal my_rnd : std_logic_vector (3 downto 0);
+    signal my_rnd : std_logic_vector (3 downto 0) := "1011";
 
     component DiviseurCore is
         Port (
@@ -73,8 +71,8 @@ architecture ControlerCore_Arch of ControlerCore is
             GAME_OVER : out std_logic
         );
     end component;
-    signal my_score : std_logic_vector (3 downto 0);
-    signal my_game_over : std_logic;
+    signal my_score : std_logic_vector (3 downto 0) := "0000";
+    signal my_game_over : std_logic := '1';
 
     component MinuteurCore is
         Port (
@@ -85,7 +83,7 @@ architecture ControlerCore_Arch of ControlerCore is
             S : out std_logic 
         );
     end component;
-    signal my_s : std_logic;
+    signal my_s : std_logic := '0';
 
 
 begin
@@ -102,7 +100,7 @@ begin
         VALID_HIT => my_valid_hit
     );
 
-    myComponentLFSR : LFSR
+    myComponentLFSR : LFSRCore
     port map (
         CLK => my_finalclk,
         RESET => my_reset,
@@ -139,32 +137,39 @@ begin
     Game_proc : process(CLK)
     begin
         if rising_edge(CLK) then
-            if state = "00" then
+            if state = IDLE then
                 my_led <= "000";
                 LED(3) <= '1';
+                LED(2 downto 0) <= "000";
                 if BTN(3) = '1' then
-                    state <= "01";
+                    state <= NEW_ROUND;
                 end if;
 
-            elsif state = "01" then
+            elsif state = NEW_ROUND then
                 -- génère la séquence pseudo aléatoire
                 my_reset <= '0';
                 my_enable_lfsr <= '1';
+                state <= RND;
                 
-                if my_rnd /= "1010" then
-                    if my_rnd = "001" then
-                        my_led <= "001"; 
-                    elsif my_rnd = "010" then
-                        my_led <= "010"; 
-                    elsif my_rnd = "100" then 
-                        my_led <= "100"; 
+
+            elsif state = RND then
+
+                if my_rnd != my_cur_lsfr then
+
+                    if to_integer(unsigned(my_rnd)) mod 3 = 0 then
+                        my_led <= "001"; -- Blue
+                    elsif to_integer(unsigned(my_rnd)) mod 3 = 1 then
+                        my_led <= "010"; -- Green   
+                    elsif to_integer(unsigned(my_rnd)) mod 3 = 2 then 
+                        my_led <= "100"; -- Red    
                     end if;
 
-                    state <= "10";
+                    state <= NEW_ROUND
                     my_enable_lfsr <= '0';
                 end if;
 
-            elsif state = "10" then
+
+            elsif state = NEW_ROUND then
                 -- game loop
                 my_enable_logigame <= '1';
                 my_start_timer <= '1';
@@ -178,27 +183,28 @@ begin
                     if my_valid_hit = '1' then
                         -- continue the game
                         my_timeout <= '0'; 
-                        LED(2 downto 0) <= my_score;
+                        LED(3 downto 0) <= my_score;
                         my_reset <= '1';
+                        state <= NEW_ROUND;
                     end if;
                 end if;
 
                 if my_s = '1' then
                     -- stop the game because the user did not press the button fast enough
                     my_timeout <= '1'; 
-                    state <= "11";
+                    state <= END_GAME;
                 end if;
 
                 if my_game_over = '1' then
                     my_enable_logigame <= '0';
-                    state <= "11";
+                    state <= END_GAME;
                 end if;
 
-            elsif state = "11" then
+            elsif state = END_GAME then
                 -- need to press start to reset the game
                 LED(3) <= '1';
                 if BTN(3) = '1' then
-                    state <= "00";
+                    state <= IDLE;
                 end if;
             end if;
         end if;
