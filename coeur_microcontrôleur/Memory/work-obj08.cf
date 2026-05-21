@@ -1,7 +1,0 @@
-v 4
-file . "mytbMEM_CACHE.vhd" "7cda865f6325ce86fb2902aa423b4994748ce7ab" "20260428193129.928":
-  entity tb_mem_cache at 1( 0) + 0 on 13;
-  architecture behavior of tb_mem_cache at 9( 150) + 0 on 14;
-file . "MEM_CACHE.vhd" "a076bca859fcf6c44d164c8c4d6559aa45433d40" "20260428193129.927":
-  entity mem_cache at 1( 0) + 0 on 11;
-  architecture mem_cache_arch of mem_cache at 14( 311) + 0 on 12;
