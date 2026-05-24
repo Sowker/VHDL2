@@ -216,7 +216,7 @@ begin
                 my_led <= "000"; 
                 
                 if BTN(3) = '1' then
-                    state <= IDLE; -
+                    state <= IDLE;
                 end if;
             end if;
         end if;

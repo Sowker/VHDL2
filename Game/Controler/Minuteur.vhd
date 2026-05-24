@@ -13,7 +13,7 @@ entity MinuteurCore is
 end MinuteurCore;
 
 architecture MinuteurCore_Arch of MinuteurCore is
-    signal counter : integer range 0 to 400000000 := 0;
+    signal counter : integer range 0 to 100 := 0;
 
 begin
     MyTimeOut_Proc : process (CLK, RESET, START, SW_LEVEL)
@@ -26,19 +26,19 @@ begin
                 counter <= counter + 1;
                 
                 if SW_LEVEL = "00" then
-                    if counter = 400000000 then   -- 400 000 000
+                    if counter = 40 then   -- 400 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "01" then
-                    if counter = 200000000 then  -- 200 000 000
+                    if counter = 20 then  -- 200 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "10" then
-                    if counter = 100000000 then  -- 100 000 000
+                    if counter = 10 then  -- 100 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "11" then
-                    if counter = 50000000 then  -- 50 000 000
+                    if counter = 5 then  -- 50 000 000
                         S <= '1';
                     end if;
                 end if;
