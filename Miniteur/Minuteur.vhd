@@ -7,7 +7,7 @@ entity MinuteurCore is
         RESET : in std_logic;
         START : in std_logic;
         SW_LEVEL : in std_logic_vector (3 downto 2);
-        CLK : in std_logic;  -- 100MHz
+        CLK : in std_logic; 
         S : out std_logic -- booléan passe à '1' lorsque le délai programmé est atteint
     );
 end MinuteurCore;
@@ -26,19 +26,19 @@ begin
                 counter <= counter + 1;
                 
                 if SW_LEVEL = "00" then
-                    if counter = 400000000 then
+                    if counter = 400000000 then   -- 400 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "01" then
-                    if counter = 200000000 then
+                    if counter = 200000000 then  -- 200 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "10" then
-                    if counter = 100000000 then
+                    if counter = 100000000 then  -- 100 000 000
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "11" then
-                    if counter = 50000000 then
+                    if counter = 50000000 then  -- 50 000 000
                         S <= '1';
                     end if;
                 end if;

@@ -1,87 +1,91 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
 
 entity tb_MinuteurCore is
--- A testbench entity is always empty because it has no external inputs or outputs
+-- Entité vide pour le testbench
 end tb_MinuteurCore;
 
-architecture behavior of tb_MinuteurCore is 
+architecture behavior of tb_MinuteurCore is
 
-    -- 1. Component Declaration for the Unit Under Test (UUT)
+    -- Déclaration de ton composant (UUT - Unit Under Test)
     component MinuteurCore
-    port(
-         RESET    : in  std_logic;
-         START    : in  std_logic;
-         SW_LEVEL : in  std_logic_vector(3 downto 2);
-         CLK      : in  std_logic;
-         S        : out std_logic
-        );
+    Port (
+        RESET    : in std_logic;
+        START    : in std_logic;
+        SW_LEVEL : in std_logic_vector (3 downto 2);
+        CLK      : in std_logic;
+        S        : out std_logic
+    );
     end component;
-    
-    -- 2. Internal Signals to connect to the UUT
-    -- Inputs initialized to '0'
-    signal clk      : std_logic := '0';
-    signal reset    : std_logic := '0';
-    signal start    : std_logic := '0';
-    signal sw_level : std_logic_vector(3 downto 2) := "00";
 
-    -- Output
-    signal s : std_logic;
+    -- Signaux d'entrée pour piloter l'UUT
+    signal CLK      : std_logic := '0';
+    signal RESET    : std_logic := '0';
+    signal START    : std_logic := '0';
+    signal SW_LEVEL : std_logic_vector(3 downto 2) := "00";
 
-    -- 3. Clock period definition (100 MHz = 10 ns period)
-    constant clk_period : time := 10 ns;
+    -- Signal de sortie pour observer l'UUT
+    signal S        : std_logic;
+
+    -- Période de l'horloge à 100 MHz (10 ns)
+    constant CLK_period : time := 10 ns;
 
 begin
 
-    -- 4. Instantiate the Unit Under Test (UUT)
-    uut: MinuteurCore 
-        port map (
-          RESET    => reset,
-          START    => start,
-          SW_LEVEL => sw_level,
-          CLK      => clk,
-          S        => s
-        );
+    -- Instanciation de ton composant
+    uut: MinuteurCore PORT MAP (
+        RESET    => RESET,
+        START    => START,
+        SW_LEVEL => SW_LEVEL,
+        CLK      => CLK,
+        S        => S
+    );
 
-    -- 5. Clock generation process
-    -- This runs continuously in the background, toggling the clock every 5 ns
-    clk_process :process
+    -- Processus de génération de l'horloge (100 MHz)
+    CLK_process :process
     begin
-        clk <= '0';
-        wait for clk_period/2;
-        clk <= '1';
-        wait for clk_period/2;
+        CLK <= '0';
+        wait for CLK_period/2;
+        CLK <= '1';
+        wait for CLK_period/2;
     end process;
 
-    -- 6. Stimulus process (The actual test script)
+    -- Processus de simulation (Stimuli)
     stim_proc: process
-    begin		
-        -- Step A: Hold reset state for 100 ns to initialize the system
-        reset <= '1';
-        wait for 100 ns;	
-        reset <= '0';
-        
-        -- Wait a few clock cycles before doing anything
-        wait for clk_period*10;
+    begin
+        -- 1. Phase d'initialisation et Reset
+        RESET <= '1';
+        wait for 50 ns;
+        RESET <= '0';
+        wait for 50 ns;
 
-        -- Step B: Set difficulty to "11" (Shortest time: 0.5 seconds)
-        sw_level <= "11";
-        wait for clk_period*2;
-
-        -- Step C: Pulse the START signal for exactly one clock cycle
-        start <= '1';
-        wait for clk_period;
-        start <= '0';
-
-        -- Step D: Wait for the timer to finish
-        -- Note: If you shrunk your counters to small numbers for testing, 
-        -- change this wait time to something like "wait for 500 ns;"
-        wait for 500.1 ms; 
+        -- 2. Test avec le niveau de difficulté "11" (50 000 000 cycles)
+        SW_LEVEL <= "11";
+        wait for CLK_period;
         
-        -- Step E: Stop the simulation
-        std.env.stop;
+        -- Démarrage du minuteur
+        -- Remarque : Ton code exige que START reste à '1' pour continuer à compter.
+        START <= '1';
         
+        -- Attente de la fin du décompte. 
+        -- 50 000 000 cycles * 10 ns = 500 ms.
+        wait for 500 ms; 
+        
+        -- Laisse un peu de marge pour observer le signal S passer à '1'
+        wait for 100 ns;
+
+        -- Relâchement de START (ton code va remettre le compteur et S à 0)
+        START <= '0';
+        wait for 100 ns;
+
+        -- 3. Reset du système avant un éventuel autre test
+        RESET <= '1';
+        wait for 50 ns;
+        RESET <= '0';
+        wait for 50 ns;
+
+        -- Fin de la simulation
+        wait;
     end process;
 
 end behavior;

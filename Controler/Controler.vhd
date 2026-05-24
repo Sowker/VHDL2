@@ -15,12 +15,13 @@ entity ControlerCore is
 end ControlerCore;
 
 architecture ControlerCore_Arch of ControlerCore is
-    type stateGame is (IDLE, NEW_ROUND, RND, WAIT_RESPONSE, WAIT_RELEASE, END_GAME);
+    -- CORRECTION : Ajout de 2 nouveaux états de synchronisation
+    type stateGame is (IDLE, WAIT_START_RELEASE, NEW_ROUND, RND, WAIT_RESPONSE, CHECK_HIT, WAIT_RELEASE, END_GAME);
     signal state : stateGame := IDLE;
 
     signal my_reset : std_logic := '1';
-    signal round_reset : std_logic := '0'; -- NEW: Resets just the buttons between rounds
-    signal my_timeout : std_logic := '0'; 
+    signal round_reset : std_logic := '0';
+    signal my_timeout : std_logic := '0';
     signal my_enable_logigame : std_logic := '0';
     signal my_enable_lfsr : std_logic := '0';
     signal my_start_timer : std_logic := '0';
@@ -86,13 +87,11 @@ architecture ControlerCore_Arch of ControlerCore is
     end component;
     signal my_s : std_logic := '0';
 
-
 begin
 
-    myComponentInputHandler : InputHandler
-    port map (
+    myComponentInputHandler : InputHandler port map (
         CLK => CLK,
-        RESET => round_reset, -- Uses round_reset so score isn't wiped!
+        RESET => round_reset,
         TIMEOUT => my_timeout,
         LED_COLOR => my_led,
         BTN_R => BTN(2),
@@ -101,23 +100,20 @@ begin
         VALID_HIT => my_valid_hit
     );
 
-    myComponentLFSR : LFSRCore
-    port map (
+    myComponentLFSR : LFSRCore port map (
         CLK => my_finalclk,
         RESET => my_reset,
         ENABLE => my_enable_lfsr, 
         RND => my_rnd
     );
 
-    myComponentDiviseurCore : DiviseurCore
-    port map (
+    myComponentDiviseurCore : DiviseurCore port map (
         CLK => CLK,
         RESET => my_reset,
         FINALCLK => my_finalclk
     );
 
-    myComponentLogiGame : LogiGameCore
-    port map (
+    myComponentLogiGame : LogiGameCore port map (
         CLK => CLK,
         RESET => my_reset,         
         ENABLE => my_enable_logigame, 
@@ -126,8 +122,7 @@ begin
         GAME_OVER => my_game_over
     );
 
-    myComponentMinuteurCore : MinuteurCore
-    port map (
+    myComponentMinuteurCore : MinuteurCore port map (
         RESET => my_reset,
         START => my_start_timer,
         SW_LEVEL => SW,
@@ -139,22 +134,26 @@ begin
     begin
         if rising_edge(CLK) then
             
-            -- DEFAULT PULSES: These force signals back to '0' automatically
+            -- DEFAULT PULSES
             my_enable_lfsr <= '0';
             my_enable_logigame <= '0';
             my_start_timer <= '0';
             round_reset <= '0';
 
             if state = IDLE then
-                my_reset <= '1'; -- Global wipe
+                my_reset <= '1'; -- On active le reset
                 round_reset <= '1';
                 my_led <= "000";
-                LED(3) <= '1';
-                LED(2 downto 0) <= "000";
                 my_timeout <= '0';
                 
                 if BTN(3) = '1' then
-                    my_reset <= '0';
+                    state <= WAIT_START_RELEASE; -- On attend que le joueur relâche le bouton !
+                end if;
+
+            elsif state = WAIT_START_RELEASE then
+                my_reset <= '0'; -- Le reset a eu le temps de se faire proprement, on le désactive
+                
+                if BTN(3) = '0' then -- Si le bouton est relâché
                     state <= NEW_ROUND;
                 end if;
 
@@ -164,7 +163,7 @@ begin
 
             elsif state = RND then
                 if my_rnd /= my_cur_lsfr then
-                    my_cur_lsfr <= my_rnd; -- Remember the new number so we don't infinitely loop
+                    my_cur_lsfr <= my_rnd;
 
                     if to_integer(unsigned(my_rnd)) mod 3 = 0 then
                         my_led <= "001"; -- Blue
@@ -174,49 +173,62 @@ begin
                         my_led <= "100"; -- Red    
                     end if;
 
-                    -- Trigger timer and reset buttons right before waiting
-                    my_start_timer <= '1'; 
+                    my_start_timer <= '1';
                     round_reset <= '1';
                     state <= WAIT_RESPONSE;
                 else
-                    my_enable_lfsr <= '1'; -- Try again if random number was the same
+                    my_enable_lfsr <= '1';
                 end if;
 
             elsif state = WAIT_RESPONSE then
                 
-                if my_game_over = '1' then -- verify if the player finished the game
+                -- CORRECTION ICI : On maintient le chronomètre enfoncé tant qu'on attend !
+                my_start_timer <= '1'; 
+                
+                if my_game_over = '1' then 
                     state <= END_GAME;
-                
-                elsif my_s = '1' then -- verify if the player run out of time to play
-                    my_timeout <= '1'; 
+                elsif my_s = '1' then 
+                    my_timeout <= '1';
                     my_enable_logigame <= '1'; 
+                    state <= END_GAME; -- Si timeout, on coupe la partie
                 
-                elsif my_valid_hit = '1' then -- verify if the player pressed a button
-                    my_enable_logigame <= '1'; 
-                    state <= WAIT_RELEASE; 
+                elsif BTN(2) = '1' or BTN(1) = '1' or BTN(0) = '1' then 
+                    -- Le joueur a appuyé ! On passe à CHECK_HIT pour attendre 1 coup d'horloge.
+                    state <= CHECK_HIT;
+                end if;
+
+
+            -- NOUVEL ETAT : On attend 1 cycle pour que InputHandler mette VALID_HIT à jour
+            elsif state = CHECK_HIT then
+                my_enable_logigame <= '1'; -- On envoie l'info au jeu
+                
+                if my_valid_hit = '1' then
+                    state <= WAIT_RELEASE; -- Bonne réponse !
+                else
+                    state <= END_GAME; -- Mauvaise réponse = Game Over direct.
                 end if;
 
             elsif state = WAIT_RELEASE then
-                
                 round_reset <= '1';
                 my_led <= "000";
                 
-                -- Check if ALL buttons are finally released ('0')
+                -- Check if ALL buttons are finally released
                 if BTN(2) = '0' and BTN(1) = '0' and BTN(0) = '0' then
                     state <= NEW_ROUND;
                 end if;
 
             elsif state = END_GAME then
-                LED(3) <= '1';
+                my_led <= "000"; -- On éteint la couleur ennemie pour montrer la défaite
+                
                 if BTN(3) = '1' then
-                    state <= IDLE;
+                    state <= IDLE; -- Un appui renvoie au début pour tout nettoyer.
                 end if;
             end if;
         end if;
     end process;
 
     -- Wiring outputs
-    LED(2 downto 0) <= my_score(2 downto 0);
+    LED<= my_score;
     LED_B <= my_led(0);
     LED_G <= my_led(1);
     LED_R <= my_led(2);
