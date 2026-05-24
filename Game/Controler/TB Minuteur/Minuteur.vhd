@@ -8,12 +8,12 @@ entity MinuteurCore is
         START : in std_logic;
         SW_LEVEL : in std_logic_vector (3 downto 2);
         CLK : in std_logic; 
-        S : out std_logic -- booléan passe à '1' lorsque le délai programmé est atteint
+        S : out std_logic
     );
 end MinuteurCore;
 
 architecture MinuteurCore_Arch of MinuteurCore is
-    signal counter : integer range 0 to 400000000 := 0;
+    signal counter : integer range 0 to 100 := 0; -- Range réduit pour la simulation
 
 begin
     MyTimeOut_Proc : process (CLK, RESET, START, SW_LEVEL)
@@ -25,20 +25,21 @@ begin
             if START = '1' then
                 counter <= counter + 1;
                 
+                -- VALEURS RÉDUITES POUR LA SIMULATION DU TB
                 if SW_LEVEL = "00" then
-                    if counter = 400000000 then   -- 400 000 000
+                    if counter = 40 then   -- 40 cycles
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "01" then
-                    if counter = 200000000 then  -- 200 000 000
+                    if counter = 20 then  -- 20 cycles
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "10" then
-                    if counter = 100000000 then  -- 100 000 000
+                    if counter = 10 then  -- 10 cycles
                         S <= '1';
                     end if;
                 elsif SW_LEVEL = "11" then
-                    if counter = 50000000 then  -- 50 000 000
+                    if counter = 5 then   -- 5 cycles
                         S <= '1';
                     end if;
                 end if;

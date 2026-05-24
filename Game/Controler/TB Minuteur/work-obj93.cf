@@ -1,0 +1,7 @@
+v 4
+file . "Minuteur.vhd" "c923273da8e57910b0550dd6dd8a070d36d437e3" "20260524152955.906":
+  entity minuteurcore at 1( 0) + 0 on 63;
+  architecture minuteurcore_arch of minuteurcore at 15( 299) + 0 on 64;
+file . "mytbMinuteur.vhd" "8d48a4221871e985524010a5bf03b09dec3066dd" "20260524152955.906":
+  entity tb_minuteurcore at 1( 0) + 0 on 65;
+  architecture behavior of tb_minuteurcore at 8( 108) + 0 on 66;

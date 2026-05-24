@@ -2,12 +2,11 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity tb_MinuteurCore is
--- Entité vide pour le testbench
+-- Entité vide
 end tb_MinuteurCore;
 
 architecture behavior of tb_MinuteurCore is
 
-    -- Déclaration de ton composant (UUT - Unit Under Test)
     component MinuteurCore
     Port (
         RESET    : in std_logic;
@@ -18,21 +17,16 @@ architecture behavior of tb_MinuteurCore is
     );
     end component;
 
-    -- Signaux d'entrée pour piloter l'UUT
     signal CLK      : std_logic := '0';
     signal RESET    : std_logic := '0';
     signal START    : std_logic := '0';
     signal SW_LEVEL : std_logic_vector(3 downto 2) := "00";
-
-    -- Signal de sortie pour observer l'UUT
     signal S        : std_logic;
 
-    -- Période de l'horloge à 100 MHz (10 ns)
     constant CLK_period : time := 10 ns;
 
 begin
 
-    -- Instanciation de ton composant
     uut: MinuteurCore PORT MAP (
         RESET    => RESET,
         START    => START,
@@ -41,7 +35,6 @@ begin
         S        => S
     );
 
-    -- Processus de génération de l'horloge (100 MHz)
     CLK_process :process
     begin
         CLK <= '0';
@@ -50,41 +43,49 @@ begin
         wait for CLK_period/2;
     end process;
 
-    -- Processus de simulation (Stimuli)
     stim_proc: process
     begin
-        -- 1. Phase d'initialisation et Reset
+        -- 1. Initialisation
         RESET <= '1';
-        wait for 50 ns;
+        wait for 30 ns;
         RESET <= '0';
-        wait for 50 ns;
+        wait for 30 ns;
 
-        -- 2. Test avec le niveau de difficulté "11" (50 000 000 cycles)
+        -- Test 1 : Niveau "11" (5 cycles)
         SW_LEVEL <= "11";
         wait for CLK_period;
-        
-        -- Démarrage du minuteur
-        -- Remarque : Ton code exige que START reste à '1' pour continuer à compter.
         START <= '1';
-        
-        -- Attente de la fin du décompte. 
-        -- 50 000 000 cycles * 10 ns = 500 ms.
-        wait for 500 ms; 
-        
-        -- Laisse un peu de marge pour observer le signal S passer à '1'
-        wait for 100 ns;
+        wait for 5 * CLK_period; -- On attend le nombre exact de cycles
+        wait for 2 * CLK_period; -- On attend 2 cycles de plus pour bien voir S rester à '1'
+        START <= '0';            -- On relâche START, S doit repasser à '0'
+        wait for 5 * CLK_period; 
 
-        -- Relâchement de START (ton code va remettre le compteur et S à 0)
+        -- Test 2 : Niveau "10" (10 cycles)
+        SW_LEVEL <= "10";
+        wait for CLK_period;
+        START <= '1';
+        wait for 10 * CLK_period;
+        wait for 2 * CLK_period;
         START <= '0';
-        wait for 100 ns;
+        wait for 5 * CLK_period;
 
-        -- 3. Reset du système avant un éventuel autre test
-        RESET <= '1';
-        wait for 50 ns;
-        RESET <= '0';
-        wait for 50 ns;
+        -- Test 3 : Niveau "01" (20 cycles)
+        SW_LEVEL <= "01";
+        wait for CLK_period;
+        START <= '1';
+        wait for 20 * CLK_period;
+        wait for 2 * CLK_period;
+        START <= '0';
+        wait for 5 * CLK_period;
 
-        -- Fin de la simulation
+        -- Test 4 : Niveau "00" (40 cycles)
+        SW_LEVEL <= "00";
+        wait for CLK_period;
+        START <= '1';
+        wait for 40 * CLK_period;
+        wait for 2 * CLK_period;
+        START <= '0';
+        
         wait;
     end process;
 
