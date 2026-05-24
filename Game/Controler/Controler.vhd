@@ -15,7 +15,6 @@ entity ControlerCore is
 end ControlerCore;
 
 architecture ControlerCore_Arch of ControlerCore is
-    -- CORRECTION : Ajout de 2 nouveaux états de synchronisation
     type stateGame is (IDLE, WAIT_START_RELEASE, NEW_ROUND, RND, WAIT_RESPONSE, CHECK_HIT, WAIT_RELEASE, END_GAME);
     signal state : stateGame := IDLE;
 
@@ -141,19 +140,19 @@ begin
             round_reset <= '0';
 
             if state = IDLE then
-                my_reset <= '1'; -- On active le reset
+                my_reset <= '1'; 
                 round_reset <= '1';
                 my_led <= "000";
                 my_timeout <= '0';
                 
                 if BTN(3) = '1' then
-                    state <= WAIT_START_RELEASE; -- On attend que le joueur relâche le bouton !
+                    state <= WAIT_START_RELEASE; 
                 end if;
 
             elsif state = WAIT_START_RELEASE then
-                my_reset <= '0'; -- Le reset a eu le temps de se faire proprement, on le désactive
+                my_reset <= '0';
                 
-                if BTN(3) = '0' then -- Si le bouton est relâché
+                if BTN(3) = '0' then 
                     state <= NEW_ROUND;
                 end if;
 
@@ -182,7 +181,6 @@ begin
 
             elsif state = WAIT_RESPONSE then
                 
-                -- CORRECTION ICI : On maintient le chronomètre enfoncé tant qu'on attend !
                 my_start_timer <= '1'; 
                 
                 if my_game_over = '1' then 
@@ -190,38 +188,35 @@ begin
                 elsif my_s = '1' then 
                     my_timeout <= '1';
                     my_enable_logigame <= '1'; 
-                    state <= END_GAME; -- Si timeout, on coupe la partie
+                    state <= END_GAME; 
                 
                 elsif BTN(2) = '1' or BTN(1) = '1' or BTN(0) = '1' then 
-                    -- Le joueur a appuyé ! On passe à CHECK_HIT pour attendre 1 coup d'horloge.
                     state <= CHECK_HIT;
                 end if;
 
-
-            -- NOUVEL ETAT : On attend 1 cycle pour que InputHandler mette VALID_HIT à jour
             elsif state = CHECK_HIT then
-                my_enable_logigame <= '1'; -- On envoie l'info au jeu
+                my_enable_logigame <= '1'; 
                 
                 if my_valid_hit = '1' then
-                    state <= WAIT_RELEASE; -- Bonne réponse !
+                    state <= WAIT_RELEASE; 
                 else
-                    state <= END_GAME; -- Mauvaise réponse = Game Over direct.
+                    state <= END_GAME; 
                 end if;
 
             elsif state = WAIT_RELEASE then
                 round_reset <= '1';
                 my_led <= "000";
                 
-                -- Check if ALL buttons are finally released
+               
                 if BTN(2) = '0' and BTN(1) = '0' and BTN(0) = '0' then
                     state <= NEW_ROUND;
                 end if;
 
             elsif state = END_GAME then
-                my_led <= "000"; -- On éteint la couleur ennemie pour montrer la défaite
+                my_led <= "000"; 
                 
                 if BTN(3) = '1' then
-                    state <= IDLE; -- Un appui renvoie au début pour tout nettoyer.
+                    state <= IDLE; -
                 end if;
             end if;
         end if;
