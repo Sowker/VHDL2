@@ -3,17 +3,18 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity Top_Level is
     Port (
-        -- Entrées globales
         CLK         : in  std_logic;
         RESET       : in  std_logic;
-        
-        -- Entrées de données
         A_IN        : in  std_logic_vector(3 downto 0);
         B_IN        : in  std_logic_vector(3 downto 0);
+        BTN_1       : in  std_logic;
+        BTN_2       : in  std_logic;
+        BTN_3       : in  std_logic;
+        SR_OUT_L    : out std_logic;
+        SR_OUT_R    : out std_logic;
         
-        -- Sortie globale du système
         RES_OUT     : out std_logic_vector(7 downto 0);
-        DONE        : out std_logic
+        DONE        : out std_logic 
     );
 end Top_Level;
 
@@ -25,7 +26,6 @@ architecture Structural of Top_Level is
     
     component ALUCore
         Port (
-            -- L'ALU n'a plus besoin d'horloge (purement combinatoire)
             Sel_FCT  : in std_logic_vector (3 downto 0);
             SR_OUT_L : out std_logic;
             SR_OUT_R : out std_logic;
@@ -91,11 +91,13 @@ architecture Structural of Top_Level is
         );
     end component;
 
-    -- Ajout de la mémoire d'instructions
     component INSTRMemory
         Port (
             CLK         : in  std_logic;
             RESET       : in  std_logic;
+            BTN_1 : in std_logic;
+            BTN_2 : in std_logic;
+            BTN_3 : in std_logic;
             SEL_ROUTE   : out std_logic_vector(3 downto 0);
             SEL_FCT     : out std_logic_vector(3 downto 0);
             SEL_OUT     : out std_logic_vector(1 downto 0)
@@ -124,7 +126,6 @@ architecture Structural of Top_Level is
     signal sig_Mem_1_in : std_logic_vector(7 downto 0);
     signal sig_Mem_2_in : std_logic_vector(7 downto 0);
 
-    -- Signaux générés par la mémoire d'instructions
     signal sig_SEL_FCT   : std_logic_vector(3 downto 0);
     signal sig_SEL_ROUTE : std_logic_vector(3 downto 0);
     signal sig_SEL_OUT   : std_logic_vector(1 downto 0);
@@ -135,16 +136,16 @@ begin
     -- 3. INSTANCIATIONS ET CÂBLAGE PHYSIQUE
     -- =========================================================
 
-    -- A. La mémoire d'instructions (Le cerveau)
     Inst_INSTRMemory: INSTRMemory port map (
         CLK         => CLK,
         RESET       => RESET,
+        BTN_1       => BTN_1,
+        BTN_2       => BTN_2,
+        BTN_3       => BTN_3,
         SEL_ROUTE   => sig_SEL_ROUTE,
         SEL_FCT     => sig_SEL_FCT,
         SEL_OUT     => sig_SEL_OUT
     );
-
-    -- B. L'Unité Arithmétique et Logique (ALUCore combinatoire)
     Inst_ALUCore: ALUCore port map (
         Sel_FCT  => sig_SEL_FCT,
         SR_OUT_L => sig_SR_OUT_L,
@@ -156,7 +157,6 @@ begin
         S        => sig_S
     );
 
-    -- C. La Mémoire Centrale (ALUBuffer)
     Inst_ALUBuffer: ALUBuffer port map (
         CLK         => CLK,
         RESET       => RESET,
@@ -178,7 +178,6 @@ begin
         MEM_SR_IN_R => sig_MEM_SR_IN_R
     );
 
-    -- D. Le Routeur Combinatoire (ALUSELROUTE)
     Inst_ALUSELROUTE: ALUSELROUTE port map (
         SEL_ROUTE   => sig_SEL_ROUTE,
         A           => A_IN,
@@ -206,5 +205,7 @@ begin
         RES_OUT     => RES_OUT
     );
     DONE <= '1' when sig_SEL_OUT /= "00" else '0';
+    SR_OUT_L <= sig_SR_OUT_L;
+    SR_OUT_R <= sig_SR_OUT_R;
 
 end Structural;

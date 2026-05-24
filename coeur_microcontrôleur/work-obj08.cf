@@ -1,22 +1,22 @@
 v 4
-file . "tb_Top_Level.vhd" "ed5abf175eadcc7731ecab7197229ffab75b8a14" "20260511084925.985":
-  entity tb_top_level at 1( 0) + 0 on 135;
-  architecture behavioral of tb_top_level at 9( 146) + 0 on 136;
-file . "Top_Level.vhd" "243689ed818bb24c96cf6d3762c51e4a883ab288" "20260511084925.985":
-  entity top_level at 1( 0) + 0 on 133;
-  architecture structural of top_level at 20( 493) + 0 on 134;
-file . "Memory/INSTRMemory.vhd" "2871ed7382f31f117937f82ac392df7e81fcfb4a" "20260511084925.985":
-  entity instrmemory at 1( 0) + 0 on 131;
-  architecture behavioral of instrmemory at 15( 369) + 0 on 132;
-file . "Memory/MEM_CACHE.vhd" "9fb70108614e133540582da75cc4a10065156e15" "20260511084925.984":
-  entity mem_sel_out_mux at 1( 0) + 0 on 129;
-  architecture behavioral of mem_sel_out_mux at 17( 497) + 0 on 130;
-file . "Buffers/ALUSELROUTE.vhd" "8f701f66e4703369a64d349e1c28f2d7958af06a" "20260511084925.984":
-  entity aluselroute at 1( 0) + 0 on 127;
-  architecture behavioral of aluselroute at 27( 857) + 0 on 128;
-file . "Buffers/ALUBuffers.vhd" "74aa6c0c10e83df284e253c7a72ad83629a19211" "20260511084925.984":
-  entity alubuffer at 1( 0) + 0 on 125;
-  architecture behavioral of alubuffer at 38( 1005) + 0 on 126;
-file . "ALU/ALU.vhd" "77092cae24ad36c9f5699cf5e7db092ee38b25ac" "20260511084925.983":
-  entity alucore at 1( 0) + 0 on 123;
-  architecture alucore_arch of alucore at 20( 419) + 0 on 124;
+file . "tb_Top_Level.vhd" "64e92e3e8f543680f493ab60a3cca77f3f9e359f" "20260521144008.520":
+  entity tb_top_level at 1( 0) + 0 on 23;
+  architecture behavior of tb_top_level at 9( 145) + 0 on 24;
+file . "Top_Level.vhd" "a960c090e03cdc465a4541ed582a827ea6ffc0a1" "20260521144008.519":
+  entity top_level at 1( 0) + 0 on 21;
+  architecture structural of top_level at 23( 631) + 0 on 22;
+file . "Memory/INSTRMemory.vhd" "79006b88816956a38192e35d2e4dfeb4a3a354d2" "20260521144008.519":
+  entity instrmemory at 1( 0) + 0 on 19;
+  architecture behavioral of instrmemory at 20( 536) + 0 on 20;
+file . "Memory/MEM_CACHE.vhd" "9fb70108614e133540582da75cc4a10065156e15" "20260521144008.518":
+  entity mem_sel_out_mux at 1( 0) + 0 on 17;
+  architecture behavioral of mem_sel_out_mux at 17( 497) + 0 on 18;
+file . "Buffers/ALUSELROUTE.vhd" "8f701f66e4703369a64d349e1c28f2d7958af06a" "20260521144008.517":
+  entity aluselroute at 1( 0) + 0 on 15;
+  architecture behavioral of aluselroute at 27( 857) + 0 on 16;
+file . "Buffers/ALUBuffers.vhd" "74aa6c0c10e83df284e253c7a72ad83629a19211" "20260521144008.517":
+  entity alubuffer at 1( 0) + 0 on 13;
+  architecture behavioral of alubuffer at 38( 1005) + 0 on 14;
+file . "ALU/ALU.vhd" "6033b443afadd29427d50d93ec488e0613190a38" "20260521144008.517":
+  entity alucore at 1( 0) + 1 on 11;
+  architecture alucore_arch of alucore at 20( 419) + 0 on 12;
