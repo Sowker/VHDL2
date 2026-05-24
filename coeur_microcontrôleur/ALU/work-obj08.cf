@@ -1,0 +1,7 @@
+v 4
+file . "tb_ALUCore.vhd" "832585bc0ac54887b11e51f33b451b918a8a0cc2" "20260521123715.935":
+  entity tb_alucore at 1( 0) + 0 on 13;
+  architecture behavior of tb_alucore at 9( 141) + 0 on 14;
+file . "ALU.vhd" "6033b443afadd29427d50d93ec488e0613190a38" "20260521123715.934":
+  entity alucore at 1( 0) + 1 on 11;
+  architecture alucore_arch of alucore at 20( 419) + 0 on 12;

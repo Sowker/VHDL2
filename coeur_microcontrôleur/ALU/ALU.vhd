@@ -66,7 +66,6 @@ begin
                 S <= "0000"& (A_IN XOR B_IN);
 
             elsif Sel_FCT = "1000" then
-                -- CORRECTION ICI : On gère le bit de retenue proprement
                 if SR_IN_R = '1' then
                     S <= "0000"& std_logic_vector(unsigned(A_IN) + unsigned(B_IN) + 1);
                 else

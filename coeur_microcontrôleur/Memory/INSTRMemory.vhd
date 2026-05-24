@@ -6,7 +6,6 @@ entity INSTRMemory is
     Port (
         CLK         : in  std_logic;
         RESET       : in  std_logic;
-        -- Les boutons pour lancer les calculs
         BTN_1       : in  std_logic;
         BTN_2       : in  std_logic;
         BTN_3       : in  std_logic;
@@ -52,20 +51,14 @@ architecture Behavioral of INSTRMemory is
         21=> "0111" & "0101" & "00", 
         22=> "1000" & "0000" & "00", 
         23=> "1110" & "0000" & "00", 
-        24=> "0110" & "0110" & "00", -- Résultat brut parasité
-
-        -- Masquage (Génération du 0001)
+        24=> "0110" & "0110" & "00",
         25=> "0010" & "0000" & "00", 
         26=> "0010" & "0010" & "00", 
         27=> "0010" & "1100" & "00", 
         28=> "0010" & "1100" & "00", 
         29=> "0010" & "1100" & "00", 
-
-        -- Masquage (AND final)
         30=> "1010" & "0000" & "00", 
         31=> "0110" & "0101" & "00", 
-        
-        -- Affichage final Automate 3
         32=> "0000" & "0000" & "01",
         
         -- Maintien de l'affichage jusqu'à la fin

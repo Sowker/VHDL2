@@ -7,8 +7,6 @@ entity Top_Level is
         RESET       : in  std_logic;
         A_IN        : in  std_logic_vector(3 downto 0);
         B_IN        : in  std_logic_vector(3 downto 0);
-        
-        -- NOUVEAU : Boutons et Retenues exposées
         BTN_1       : in  std_logic;
         BTN_2       : in  std_logic;
         BTN_3       : in  std_logic;
@@ -28,7 +26,6 @@ architecture Structural of Top_Level is
     
     component ALUCore
         Port (
-            -- L'ALU n'a plus besoin d'horloge (purement combinatoire)
             Sel_FCT  : in std_logic_vector (3 downto 0);
             SR_OUT_L : out std_logic;
             SR_OUT_R : out std_logic;
@@ -94,7 +91,6 @@ architecture Structural of Top_Level is
         );
     end component;
 
-    -- Ajout de la mémoire d'instructions
     component INSTRMemory
         Port (
             CLK         : in  std_logic;
@@ -130,7 +126,6 @@ architecture Structural of Top_Level is
     signal sig_Mem_1_in : std_logic_vector(7 downto 0);
     signal sig_Mem_2_in : std_logic_vector(7 downto 0);
 
-    -- Signaux générés par la mémoire d'instructions
     signal sig_SEL_FCT   : std_logic_vector(3 downto 0);
     signal sig_SEL_ROUTE : std_logic_vector(3 downto 0);
     signal sig_SEL_OUT   : std_logic_vector(1 downto 0);
@@ -141,7 +136,6 @@ begin
     -- 3. INSTANCIATIONS ET CÂBLAGE PHYSIQUE
     -- =========================================================
 
-    -- A. La mémoire d'instructions (Le cerveau)
     Inst_INSTRMemory: INSTRMemory port map (
         CLK         => CLK,
         RESET       => RESET,
@@ -152,7 +146,6 @@ begin
         SEL_FCT     => sig_SEL_FCT,
         SEL_OUT     => sig_SEL_OUT
     );
-    -- B. L'Unité Arithmétique et Logique (ALUCore combinatoire)
     Inst_ALUCore: ALUCore port map (
         Sel_FCT  => sig_SEL_FCT,
         SR_OUT_L => sig_SR_OUT_L,
@@ -164,7 +157,6 @@ begin
         S        => sig_S
     );
 
-    -- C. La Mémoire Centrale (ALUBuffer)
     Inst_ALUBuffer: ALUBuffer port map (
         CLK         => CLK,
         RESET       => RESET,
@@ -186,7 +178,6 @@ begin
         MEM_SR_IN_R => sig_MEM_SR_IN_R
     );
 
-    -- D. Le Routeur Combinatoire (ALUSELROUTE)
     Inst_ALUSELROUTE: ALUSELROUTE port map (
         SEL_ROUTE   => sig_SEL_ROUTE,
         A           => A_IN,
